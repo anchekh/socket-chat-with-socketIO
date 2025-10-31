@@ -15,8 +15,78 @@ datasource db {
 }
 
 model User {
-  id              Int             @id @default(autoincrement())
-  user_id         String          @unique
-  online          Boolean         @default(false)
-  created_at      DateTime        @default(now())
+  id                    String                    @id @default(cuid())
+  username              String                    @unique
+  status                String                    @default("offline")
+  nowRoom               String?   
+  role                  Int                       @default(1)
+  isMuted               Boolean                   @default(false)
+  createdAt             DateTime                  @default(now())
+  updatedAt             DateTime                  @updatedAt
+
+  // typingExpires         DateTime?                 @map("typing_expires")
+  // awayExpires           DateTime?                 @map("away_expires")
+  // lastMessage           String?                   @map("last_message")
+  // lastMessageTs         DateTime?                 @map("last_message_ts")
+  // lastActivity          DateTime?                 @map("last_activity")
+
+  messages              Message[]                 @relation("userMessages")
+  likes                 MessageLike[]
+  unread                UnreadMessage[]
+  // @@map("users")
+}
+
+model Room {
+  id                    String                    @id @default(cuid())
+  name                  String                    @unique
+  isPrivate             Boolean                   @default(false)
+  allowedUsers          String?
+  createdAt             DateTime                  @default(now())
+  invites               RoomInvite[]
+  messages              Message[]
+}
+
+model RoomInvite {
+  id                    String                    @id @default(cuid())
+  roomId                String
+  inviter               String
+  invitee               String
+  createdAt             DateTime                  @default(now())
+
+  room Room @relation(fields: [roomId], references: [id])
+}
+
+model Message {
+  id                    String                     @id @default(cuid())
+  text                  String
+  userId                String
+  roomId                String
+  createdAt             DateTime                   @default(now())
+  mentions              String?
+  likes                 MessageLike[]
+  user                  User                       @relation("userMessages", fields:[userId], references:[id])
+  room                  Room                       @relation(fields:[roomId], references:[id])
+  unread                UnreadMessage[]
+}
+
+model MessageLike {
+  id                    String                      @id @default(cuid())
+  messageId             String
+  userId                String
+  createdAt             DateTime                    @default(now())
+
+  message               Message                     @relation(fields:[messageId], references:[id])
+  user                  User                        @relation(fields:[userId], references:[id])
+  @@unique([messageId, userId])
+}
+
+model UnreadMessage {
+  id                    String                      @id @default(cuid())
+  messageId             String
+  userId                String
+  createdAt             DateTime                    @default(now())
+
+  message               Message                     @relation(fields:[messageId], references:[id])
+  user                  User                        @relation(fields:[userId], references:[id])
+  @@unique([messageId, userId])
 }

@@ -1,5 +1,5 @@
 {
-  "name": "node2609",
+  "name": "node2210",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -14,7 +14,7 @@
     "typescript": "^5.9.2"
   },
   "dependencies": {
-    "@prisma/client": "^6.16.3",
+    "@prisma/client": "^6.18.0",
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "http": "^0.0.1-security",

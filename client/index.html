@@ -1,69 +1,98 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Socket Login Example</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>chat</title>
+  <!-- Cтили -->
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-      <input type="text" id="userIdInput" placeholder="Введите ваш ID">
-      <button id="loginButton">Войти</button>
-      <button id="exitButton">Выйти</button>
-      <div id="status"></div>
-
-<script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
-<script>
-      let socket = null;
-
-      document.getElementById('loginButton').onclick = function() {
-            const userId = document.getElementById('userIdInput').value.trim();
-            if (!userId) {
-                  document.getElementById('status').innerText = "Введите ID!";
-                  return;
-            }
-            document.getElementById('status').innerText = "Подключение...";
-            
-            // Открыть сокет
-            socket = io('http://localhost:3000');
-            
-            socket.on('connect', function() {
-                  document.getElementById('status').innerText = "Успешно! Ваш ID: " + userId;
-
-                  // Отправить ID в событии login
-                  socket.emit('login', userId);
-            });
-
-            socket.on('message', function(message) {
-                  console.log("Сервер:", message);
-            });
-
-            socket.on('userStatus', function(userData) {
-                  console.log("Статус пользователя:", userData);
-            });
-
-            socket.on('broadcasted', function(message) {
-                  console.log("Broadcast:", message);
-            });
-      };
-      
-      document.getElementById('exitButton').onclick = function() {
-        const userId = document.getElementById('userIdInput').value.trim();
-        if (socket && userId) {
-            socket.emit('logout', userId);
-            document.getElementById('status').innerText = "Вы вышли";
-        }
-      };
-</script>
-<style>
-      button {
-            background-color: #fff;
-      }
-      #loginButton {
-            color: #2bff00;
-      }
-      #exitButton {
-            color: #ff0000
-      }
-</style>
+  <!-- Авторизация -->
+  <div class="login" id="login" style="display: flex;">
+    <div class="login__text">Enter your username</div>
+    <input type="text" id="login__input">
+    <button class="login__button" id="login__button">Login</button>
+    <div class="login__warning" id="login__warning"></div>
+  </div>
+  <!-- Создание комнаты -->
+  <div class="room-create" id="room-create" style="display: none;">
+    <div class="room-create__label">Write the name of the room:</div>
+    <input type="text" id="room-create__name">
+    <div class="room-create__label">Select room type:</div>
+    <div class="room-create__types">
+      <input type="radio" name="room-type" value="private" id="room-create__private">
+      <label for="room-create__private">Private</label>
+      <input type="radio" name="room-type" value="public" id="room-create__public">
+      <label for="room-create__public">Public</label>
+    </div>
+    <div class="room-create__label">Enter allowed members (via ","):</div>
+    <input type="text" id="room-create__members">
+    <button class="room-create__submit" id="room-create__submit">Create a room</button>
+    <button class="room-create__close" id="room-create__close">Close the window</button>
+  </div>
+  <!-- Присоединение/отсоединение от комнаты -->
+  <div class="room-actions" id="room-actions" style="display: none;">
+    <p class="room-actions__title">Select action:</p>
+    <div class="room-actions__types">
+      <input type="radio" name="room-actions-type" value="join" id="room-actions-join">
+      <label for="room-actions__join">Join</label>
+      <input type="radio" name="room-actions-type" value="leave" id="room-actions-leave">
+      <label for="room-actions__leave">Leave</label>
+    </div>
+    <p class="room-actions__text">Enter room name:</p>
+    <input type="text" id="room-actions__input">
+    <button class="room-actions__submit" id="room-actions__submit">Join/Leave the room</button>
+    <button class="room-actions__close" id="room-actions__close">Close the window</button>
+  </div>
+  <!-- Список участников -->
+  <div class="members" id="members" style="display: none;">
+    <p class="members__title">Chat members:</p>
+    <div class="members__list" id="members__list"></div>
+    <button class="members__close" id="members__close">Close the window</button>
+  </div>
+  <!-- Чат -->
+  <div class="chat" id="chat" style="display: none;">
+    <div class="chat__left">
+      <div class="chat__header">
+        <button class="chat__exit" id="chat__exit">x</button>
+        <div class="chat__username" id="chat__username">Username</div>
+        <button class="chat__add-room" id="chat__add-room">+</button>
+      </div>
+      <div class="chat__rooms">
+        <div class="chat-room" id="chat-room">
+          <div class="chat-room__name" id="chat-room__name">Room1</div>
+          <div class="chat-room__type" id="chat-room__type">Public</div>
+        </div>
+      </div>
+      <div class="chat__footer">
+        <button class="chat-room__join" id="chat-room__join">join the room</button>
+        <button class="chat-room__leave" id="chat-room__leave">leave the room</button>
+      </div>
+    </div>
+    <div class="chat__right">
+      <div class="chat__room-info">
+        <div class="chat__room-name" id="chat__room-name">Room1</div>
+        <div class="chat__room-members" id="chat__room-members">Members: 10</div>
+        <div class="chat__room-type" id="chat__room-type">Public</div>
+      </div>
+      <div class="chat__messages">
+        <div class="chat__notice" id="chat__notice" style="display: flex;">Select a room to get started!</div>
+        <!-- <div class="message" id="message">
+          <div class="message__sender" id="message__sender">User1:</div>
+          <div class="message__text" id="message__text">Hello!</div>
+          <div class="message__reaction">❤</div>
+        </div> -->
+      </div>
+      <div class="chat__input">
+        <input type="text" id="chat__message-input">
+        <button class="chat__send" id="chat__send">></button>
+      </div>
+    </div>
+  </div>
+  <!-- Socket.io -->
+  <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
+  <!-- Скрипт -->
+  <script src="index.js"></script>
 </body>
 </html>
